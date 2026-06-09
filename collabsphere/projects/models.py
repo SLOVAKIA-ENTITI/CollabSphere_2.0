@@ -87,8 +87,7 @@ class Task(models.Model):
     deadline = models.DateField(null=True, blank=True, verbose_name='Termín')
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='todo', verbose_name='Stav')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', verbose_name='Projekt')
-    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
-                                 related_name='tasks', verbose_name='Riešiteľ')
+    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='tasks', verbose_name='Riešiteľ')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

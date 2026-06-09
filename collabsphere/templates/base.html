@@ -5,9 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CollabSphere{% endblock %}</title>
+    <!-- Anti-FOUC: apply saved theme before any paint -->
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('cs-theme') === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'css/modern.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dark.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -55,6 +66,16 @@
                 <div class="text-muted extra-small" style="font-size: 0.7rem;">Prihlásený</div>
             </div>
         </div>
+
+        <!-- Theme toggle button -->
+        <button class="theme-toggle-btn" id="themeToggle" title="Prepnúť tému" aria-label="Prepnúť tmavý/svetlý režim">
+            <i class="bi bi-moon-stars-fill ttb-icon" id="themeIcon"></i>
+            <span class="ttb-label" id="themeLabel">Tmavý režim</span>
+            <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+            </span>
+        </button>
+
         <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-danger w-100">
             <i class="bi bi-box-arrow-right me-1"></i> Odhlásiť sa
         </a>
@@ -95,6 +116,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script>
+    /* ── Sidebar mobile toggle ── */
     document.getElementById('sidebarToggle').addEventListener('click', function() {
         document.getElementById('sidebar').classList.toggle('show');
         const icon = this.querySelector('i');
@@ -104,19 +126,53 @@
             icon.classList.replace('bi-x-lg', 'bi-list');
         }
     });
-
-    // Close sidebar when clicking outside on mobile
     document.addEventListener('click', function(event) {
         const sidebar = document.getElementById('sidebar');
-        const toggle = document.getElementById('sidebarToggle');
-        if (window.innerWidth <= 768 && 
-            !sidebar.contains(event.target) && 
-            !toggle.contains(event.target) && 
+        const toggle  = document.getElementById('sidebarToggle');
+        if (window.innerWidth <= 768 &&
+            !sidebar.contains(event.target) &&
+            !toggle.contains(event.target) &&
             sidebar.classList.contains('show')) {
             sidebar.classList.remove('show');
             toggle.querySelector('i').classList.replace('bi-x-lg', 'bi-list');
         }
     });
+
+    /* ── Theme toggle ── */
+    (function() {
+        const html      = document.documentElement;
+        const btn       = document.getElementById('themeToggle');
+        const iconEl    = document.getElementById('themeIcon');
+        const labelEl   = document.getElementById('themeLabel');
+
+        function isDark() {
+            return html.getAttribute('data-theme') === 'dark';
+        }
+
+        function syncUI() {
+            if (isDark()) {
+                iconEl.className  = 'bi bi-sun-fill ttb-icon';
+                labelEl.textContent = 'Svetlý režim';
+            } else {
+                iconEl.className  = 'bi bi-moon-stars-fill ttb-icon';
+                labelEl.textContent = 'Tmavý režim';
+            }
+        }
+
+        // Sync on load (theme may already be dark from anti-FOUC script)
+        syncUI();
+
+        btn.addEventListener('click', function() {
+            if (isDark()) {
+                html.removeAttribute('data-theme');
+                try { localStorage.setItem('cs-theme', 'light'); } catch(e) {}
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                try { localStorage.setItem('cs-theme', 'dark'); } catch(e) {}
+            }
+            syncUI();
+        });
+    })();
 </script>
 {% block extra_js %}{% endblock %}
 </body>
